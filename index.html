@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Caesar Cipher Tool</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 700px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        p {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+        }
+        .input-section {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+        }
+        textarea, input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 16px;
+        }
+        textarea:focus, input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        textarea {
+            resize: vertical;
+            font-family: monospace;
+        }
+        input {
+            width: 150px;
+        }
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin: 25px 0;
+            flex-wrap: wrap;
+        }
+        .btn {
+            flex: 1;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+        .encrypt { background: #28a745; color: white; }
+        .decrypt { background: #007bff; color: white; }
+        .brute { background: #ffc107; color: #333; }
+        .clear { background: #dc3545; color: white; }
+        .output-section {
+            margin-top: 20px;
+        }
+        .result-box {
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            padding: 15px;
+            min-height: 100px;
+            font-family: monospace;
+            font-size: 16px;
+            word-wrap: break-word;
+            white-space: pre-wrap;
+        }
+        .note {
+            margin-top: 20px;
+            padding: 10px;
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            border-radius: 5px;
+            font-size: 14px;
+            color: #856404;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔐 Caesar Cipher Tool</h1>
+        <p>Encrypt and decrypt messages using Caesar Cipher</p>
+
+        <div class="input-section">
+            <label for="message">Your Message:</label>
+            <textarea id="message" rows="4" placeholder="Enter your message here..."></textarea>
+        </div>
+
+        <div class="input-section">
+            <label for="shift">Shift Value (1-25):</label>
+            <input type="number" id="shift" min="1" max="25" value="3">
+        </div>
+
+        <div class="button-group">
+            <button class="btn encrypt" onclick="encrypt()">🔒 Encrypt</button>
+            <button class="btn decrypt" onclick="decrypt()">🔓 Decrypt</button>
+            <button class="btn brute" onclick="bruteForce()">🔨 Brute Force</button>
+            <button class="btn clear" onclick="clearAll()">🗑️ Clear</button>
+        </div>
+
+        <div class="output-section">
+            <label>Result:</label>
+            <div id="result" class="result-box">Ready to encrypt/decrypt...</div>
+        </div>
+
+        <div class="note">
+            <strong>Note:</strong> Only letters (A-Z, a-z) are shifted. Numbers and symbols remain unchanged.
+        </div>
+    </div>
+
+    <script>
+        function encrypt() {
+            const message = document.getElementById('message').value;
+            const shift = parseInt(document.getElementById('shift').value);
+            if (!message) {
+                showResult('Please enter a message first!', 'error');
+                return;
+            }
+            if (shift < 1 || shift > 25) {
+                showResult('Shift value must be between 1 and 25!', 'error');
+                return;
+            }
+            const result = caesarCipher(message, shift);
+            showResult('🔒 Encrypted: ' + result, 'success');
+        }
+
+        function decrypt() {
+            const message = document.getElementById('message').value;
+            const shift = parseInt(document.getElementById('shift').value);
+            if (!message) {
+                showResult('Please enter a message first!', 'error');
+                return;
+            }
+            if (shift < 1 || shift > 25) {
+                showResult('Shift value must be between 1 and 25!', 'error');
+                return;
+            }
+            const result = caesarCipher(message, -shift);
+            showResult('🔓 Decrypted: ' + result, 'success');
+        }
+
+        function bruteForce() {
+            const message = document.getElementById('message').value;
+            if (!message) {
+                showResult('Please enter an encrypted message first!', 'error');
+                return;
+            }
+            let results = '<strong>🔨 Brute Force Results:</strong><br><br>';
+            for (let shift = 1; shift <= 25; shift++) {
+                const decrypted = caesarCipher(message, -shift);
+                results += '<strong>Shift ' + shift + ':</strong> ' + decrypted + '<br>';
+            }
+            document.getElementById('result').innerHTML = results;
+        }
+
+        function caesarCipher(text, shift) {
+            let result = '';
+            for (let i = 0; i < text.length; i++) {
+                let char = text[i];
+                if (char >= 'A' && char <= 'Z') {
+                    const shifted = ((char.charCodeAt(0) - 65 + shift) % 26 + 26) % 26;
+                    result += String.fromCharCode(shifted + 65);
+                }
+                else if (char >= 'a' && char <= 'z') {
+                    const shifted = ((char.charCodeAt(0) - 97 + shift) % 26 + 26) % 26;
+                    result += String.fromCharCode(shifted + 97);
+                }
+                else {
+                    result += char;
+                }
+            }
+            return result;
+        }
+
+        function showResult(text, type) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = text;
+            resultDiv.style.color = type === 'error' ? '#dc3545' : '#28a745';
+            setTimeout(function() {
+                resultDiv.style.color = '#333';
+            }, 2000);
+        }
+
+        function clearAll() {
+            document.getElementById('message').value = '';
+            document.getElementById('shift').value = '3';
+            document.getElementById('result').innerHTML = 'Ready to encrypt/decrypt...';
+        }
+
+        document.getElementById('shift').addEventListener('input', function() {
+            let val = parseInt(this.value);
+            if (val > 25) this.value = 25;
+            if (val < 1) this.value = 1;
+        });
+    </script>
+</body>
+</html>
