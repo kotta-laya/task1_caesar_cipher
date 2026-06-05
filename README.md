@@ -25,6 +25,4 @@ Open `index.html` in any web browser to use the tool.
 3. Click **Encrypt**, **Decrypt**, or **Brute Force**
 4. View result instantly
 
-### Terminal Version
-```bash
-python caesar_cipher.py
+
